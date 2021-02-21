@@ -51,12 +51,11 @@ server.get('/weather',(req,res) =>{
     const weatherData = require('./data/weather.json');
     // console.log(weatherData)
     let weatherArr =[]
-    for (let i = 0; i < weatherData.data.length; i++) {
-
-        const weatherStatus = new Weather (weatherData,i)
-        weatherArr.push(weatherStatus)
-        
-    }
+    weatherData.data.forEach(element =>{
+        const weatherStatus = new Weather(element);
+        console.log(weatherData);
+        weatherArr.push(weatherStatus)        
+    }) 
     res.send(weatherArr)
 
 
@@ -64,15 +63,18 @@ server.get('/weather',(req,res) =>{
 
 // Constructors for weather
 
-function Weather (weatherInfo,i){
-    this.forecast = weatherInfo.data[i].weather.description;
-    this.time = weatherInfo.data[i].datetime;
+function Weather (weatherInfo){
+    this.forecast = weatherInfo.weather.description;
+    this.time = weatherInfo.datetime;
 
 }
 
 
 server.use("*",(req,res) => {
     res.status(404).send('Not found')
+})
+server.use('*',(req,res)=>{
+    res.status(500).send('Sorry, something went wrong')
 })
 
 
