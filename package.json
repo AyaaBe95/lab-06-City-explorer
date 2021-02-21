@@ -1,0 +1,28 @@
+{
+  "name": "lab-06-City-explorer",
+  "version": "1.0.0",
+  "description": "Number and name of feature: ________________________________",
+  "main": "server.js",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "env": "^0.0.2",
+    "express": "^4.17.1",
+    "server": "^1.0.32"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AyaaBe95/lab-06-City-explorer.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AyaaBe95/lab-06-City-explorer/issues"
+  },
+  "homepage": "https://github.com/AyaaBe95/lab-06-City-explorer#readme"
+}
