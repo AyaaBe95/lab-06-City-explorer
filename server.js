@@ -1,6 +1,6 @@
 'use strict';
 
-const express = require ('express');
+const express = require('express');
 const server = express();
 const cors = require('cors');
 const PORT = process.env.PORT || 3030;
@@ -28,52 +28,52 @@ server.listen(PORT, () => {
 
 // get locations
 
-server.get('/location',(req,res) =>{
+server.get('/location', (req, res) => {
     const locData = require('./data/location.json');
     // console.log(locData)
-    const locationData = new Location (locData);
+    const locationData = new Location(locData);
     res.send(locationData)
 
 })
 
 // Constructors for location
 
-function Location (geoData){
+function Location(geoData) {
     this.search_query = "city";
-    this.formatted_query= geoData[0].display_name;
+    this.formatted_query = geoData[0].display_name;
     this.latitude = geoData[0].lat;
     this.longitude = geoData[0].lon;
 }
 
 // get weather
 
-server.get('/weather',(req,res) =>{
-    const weatherData = require('./data/weather.json');
-    // console.log(weatherData)
-    let weatherArr =[]
-    weatherData.data.forEach(element =>{
-        const weatherStatus = new Weather(element);
-        console.log(weatherData);
-        weatherArr.push(weatherStatus)        
-    }) 
-    res.send(weatherArr)
+server.get('/weather', (req, res) => {
+    const weatherData =require('./data/weather.json');
+   
+
+    let weatherArr = [];
+    for (let i = 0; i < weatherData.data.length; i++) {
+        const weather = new Weather( weatherData, i);
+        weatherArr.push(weather);
+    }
+    res.send(weatherArr);
 
 
 })
 
 // Constructors for weather
 
-function Weather (weatherInfo){
-    this.forecast = weatherInfo.weather.description;
-    this.time = weatherInfo.datetime;
+function Weather(weatherInfo, i) {
+    this.forecast = weatherInfo.data[i].weather.description;
+    this.time = weatherInfo.data[i].datetime;
 
 }
 
 
-server.use("*",(req,res) => {
+server.use("*", (req, res) => {
     res.status(404).send('Not found')
 })
-server.use('*',(req,res)=>{
+server.use('*', (req, res) => {
     res.status(500).send('Sorry, something went wrong')
 })
 
