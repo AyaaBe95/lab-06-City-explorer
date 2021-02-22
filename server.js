@@ -6,15 +6,8 @@ const cors = require('cors');
 const PORT = process.env.PORT || 3030;
 
 const superagent = require('superagent')
-
-
-
-
 require('dotenv').config();
-
-
 server.use(cors());
-
 
 
 
@@ -22,36 +15,25 @@ server.listen(PORT, () => {
     console.log(`Listening on PORT ${PORT}`);
 })
 
-//testing
-// server.get('/test',(req,res) =>{
-//     res.send('your server is working fine')
-// })
 
-
-
-// server.get('/location', (req, res) => {
-//     const locData = require('./data/location.json');
-//     // console.log(locData)
-//     const locationData = new Location(locData);
-//     res.send(locationData)
-
-// })
 
 
 // location
 
 server.get('/location', locationHandler);
 server.get('/weather', weatherhandler)
+server.get('/parks', parkHandler);
 
 
 function locationHandler(request, response) {
     const city = request.query.city;
-    // console.log(city)
 
     getLocation(city)
         .then(locationData => {
             response.status(200).json(locationData);
 
+        }).catch(()=>{
+            errorHandler('Error in getting data from LocationIQ')
         })
 
 
@@ -72,7 +54,6 @@ function getLocation(city) {
 
 }
 
-// Constructors for location
 
 function Location (city, geoData) {
     this.search_query = city;
@@ -81,14 +62,17 @@ function Location (city, geoData) {
     this.longitude = geoData[0].lon;
 }
 
-// get weather
+////////////////////////////////////
 
+// get weather
 
 function weatherhandler(request, response){
     const city = request.query.search_query;
     getWeather(city)
     .then(weatherData =>{
         response.status(200).json(weatherData);
+    }).catch(()=>{
+        errorHandler('Error in getting data from WeatherIQ')
     })
 
 
@@ -101,7 +85,7 @@ function getWeather (city){
     
     return superagent.get(url)
     .then(weatherData =>{
-        weatherData.body.data.map(val =>{
+        weatherData.body.data.map((val,i) =>{
             let weatherInfo = new  Weather (val);
             watherStatus.push(weatherInfo)
         })
@@ -116,18 +100,63 @@ function Weather(i) {
     this.time = i.datetime;
 
 }
+//////////////////////////////
+
+// get park
+
+function parkHandler(request,response){
+    const city = request.query.search_query;
+    getPark(city)
+    .then(parkData =>{
+        response.status(200).json(parkData);
+    }).catch(()=>{
+        errorHandler('Error in getting data from parkIQ')
+    })
+
+  
+    
+
+}
+
+function getPark(){
+    let key =process.env.PARK_KEY;
+
+    const url =`https://developer.nps.gov/api/v1/parks?parkCode=acad&api_key=${key}`
+    let parkArr =[];
+
+    return superagent.get(url)
+    .then(parkData => {
+        parkData.body.data.map((val,i) =>{
+            let parkInfo = new Park (val);
+            parkArr.push(parkInfo)
+        })
+        return parkArr;
+    })
+
+}
+
+function Park(info){
+    this.name =info.fullName;
+    this.addresses =info.addresses;
+    this.fee =info.fees;
+    this.desc =info.description;
+    this.url =info.url
+
+}
 
 
 
+function errorHandler(errors) {
+    server.use('*',(req,res)=>{
+        res.status(500).send(errors);
+    })
+}
 
 
-// errors
-server.use("*", (req, res) => {
-    res.status(404).send('Not found')
-})
-server.use('*', (req, res) => {
-    res.status(500).send('Sorry, something went wrong')
-})
+//  errors
+// server.use("*", (req, res) => {
+//     res.status(404).send('Not found')
+// })
 
 
 
