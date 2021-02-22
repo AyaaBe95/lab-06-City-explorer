@@ -5,10 +5,12 @@
   "main": "server.js",
   "dependencies": {
     "cors": "^2.8.5",
-    "env": "^0.0.2",
+    "env": "0.0.2",
     "express": "^4.17.1",
+    "request": "^2.88.2",
     "require": "^2.4.20",
-    "server": "^1.0.32"
+    "server": "^1.0.32",
+    "superagent": "^6.1.0"
   },
   "devDependencies": {},
   "scripts": {
