@@ -1,20 +1,20 @@
 'use strict';
 
+require('dotenv').config();
 const express = require('express');
 const server = express();
 const cors = require('cors');
 const PORT = process.env.PORT || 3030;
 
+const pg =require('pg');
+const client=new pg.Client(process.env.DATABASE_URL);
+// const client = new pg.Client({ connectionString: process.env.DATABASE_URL,   ssl: { rejectUnauthorized: false } });
+
+
+
+
 const superagent = require('superagent')
-require('dotenv').config();
 server.use(cors());
-
-
-
-server.listen(PORT, () => {
-    console.log(`Listening on PORT ${PORT}`);
-})
-
 
 
 
@@ -38,19 +38,49 @@ function locationHandler(request, response) {
 
 
 }
+let lat;
+let lon;
 
 function getLocation(city) {
+    let SQL='SELECT * FROM location WHERE  search_query=$1;';
+    let safevalues=[city];
+    return client.query(SQL,safevalues)
+    .then(results=>{
+        if(results.count)
+        {
+            return results.row[0];
+        }
+        else
+        {
+            console.log(city);
+
+
     let key = process.env.LOCATION_KEY;
 
     let url = `https://us1.locationiq.com/v1/search.php?key=${key}&q=${city}&format=json`;
 
     return superagent.get(url)
         .then(locData => {
-
+            let SQL='INSERT INTO location(search_query,formatted_query,latitude,longitude)VALUES($1,$2,$3,$4);';
             const locationData = new Location(city, locData.body);
-            return locationData;
+            lat=locationData.latitude;
+            lon=locationData.longitude;
+
+            let safevalues=[city,locationData.formatted_query,lat,lon];
+
+
+            return client.query(SQL,safevalues)
+          .then(results=>{
+              results.rows[0];
+
+          })
+          
 
         })
+        .catch(error=>errorHandler(error));
+    }
+})
+
 
 }
 
@@ -71,6 +101,7 @@ function weatherhandler(request, response){
     getWeather(city)
     .then(weatherData =>{
         response.status(200).json(weatherData);
+        
     }).catch(()=>{
         errorHandler('Error in getting data from WeatherIQ')
     })
@@ -144,19 +175,35 @@ function Park(info){
 
 }
 
+/////////////////////////
+
+
+server.get('*', notFoundHandler);
+
+server.use(errorHandler);
+
+server.use('*', (request, response) => {
+    response.status(404).send('NOT FOUND');
+});
+
+function notFoundHandler(request,response) { 
+    response.status(404).send('huh??');
+}
 
 
 function errorHandler(errors) {
-    server.use('*',(req,res)=>{
-        res.status(500).send(errors);
+    server.use('*',(request,response)=>{
+        response.status(500).send(errors);
     })
 }
 
 
-//  errors
-// server.use("*", (req, res) => {
-//     res.status(404).send('Not found')
-// })
+client.connect()
+.then(()=>{
+    server.listen(PORT, () => {
+        console.log(`Listening on PORT${PORT}`);
+    })
+});
 
 
 
