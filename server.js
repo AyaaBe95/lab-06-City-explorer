@@ -12,7 +12,6 @@ const client=new pg.Client(process.env.DATABASE_URL);
 
 
 
-
 const superagent = require('superagent')
 server.use(cors());
 
@@ -38,51 +37,47 @@ function locationHandler(request, response) {
 
 
 }
-let lat;
-let lon;
-
-function getLocation(city) {
-    let SQL='SELECT * FROM location WHERE  search_query=$1;';
-    let safevalues=[city];
-    return client.query(SQL,safevalues)
-    .then(results=>{
-        if(results.count)
-        {
-            return results.row[0];
-        }
-        else
-        {
-            console.log(city);
 
 
+function getLocation(city,res) {
+    let lat;
+    let lon;
     let key = process.env.LOCATION_KEY;
-
     let url = `https://us1.locationiq.com/v1/search.php?key=${key}&q=${city}&format=json`;
+    let SQL='SELECT * FROM location WHERE  search_query=$1;';
 
-    return superagent.get(url)
-        .then(locData => {
-            let SQL='INSERT INTO location(search_query,formatted_query,latitude,longitude)VALUES($1,$2,$3,$4);';
-            const locationData = new Location(city, locData.body);
-            lat=locationData.latitude;
-            lon=locationData.longitude;
+     client.query(SQL)
+    .then(result =>{
+        console.log(result)
+        if (result.rowCount){
+            return result.row[0]
+        }
+        else{
+             superagent.get(url)
+            .then(locData => {
+                const SQLIn = 'INSERT INTO location(search_query,formatted_query,latitude,longitude)VALUES($1,$2,$3,$4) RETURNING *;';
+                var  locationData = new Location(city, locData.body);
+                lat=locationData.latitude;
+                lon=locationData.longitude;
+                let safevalues=[city,locationData.formatted_query,lat,lon];
+                 client.query(SQLIn, safevalues)
+                .then(result => {
+                    result.rows[0];
+                    res.send(result.rows);
+                })
+                .catch(error=>errorHandler(error));
+            })
 
-            let safevalues=[city,locationData.formatted_query,lat,lon];
+        }
 
+    })
+   
 
-            return client.query(SQL,safevalues)
-          .then(results=>{
-              results.rows[0];
+    
 
-          })
-          
-
-        })
-        .catch(error=>errorHandler(error));
+   
     }
-})
 
-
-}
 
 
 function Location (city, geoData) {
@@ -204,6 +199,9 @@ client.connect()
         console.log(`Listening on PORT${PORT}`);
     })
 });
+
+
+
 
 
 
