@@ -18,12 +18,6 @@ const client=new pg.Client(process.env.DATABASE_URL);
 
 
 
-server.listen(PORT, () => {
-    console.log(`Listening on PORT ${PORT}`);
-})
-
-
-
 
 // location
 
@@ -197,6 +191,13 @@ function errorHandler(errors) {
     })
 }
 
+
+client.connect()
+    .then(() => {
+        server.listen(PORT, () =>
+            console.log(`localhost:${PORT}`)
+        );
+    })
 
 
 
