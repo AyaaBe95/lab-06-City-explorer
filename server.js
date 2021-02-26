@@ -14,6 +14,18 @@ const client=new pg.Client(process.env.DATABASE_URL);
 // const client = new pg.Client({ connectionString: process.env.DATABASE_URL,   ssl: { rejectUnauthorized: false } });
 
 
+const superagent = require('superagent')
+server.use(cors());
+
+
+
+server.listen(PORT, () => {
+    console.log(`Listening on PORT ${PORT}`);
+})
+
+
+
+
 // location
 
 server.get('/location', locationHandler);
@@ -40,7 +52,6 @@ function locationHandler(request, response) {
 
 
 function getLocation(city) {
-  
     let key = process.env.LOCATION_KEY;
 
 
@@ -70,6 +81,7 @@ function getLocation(city) {
             })
             .catch(error=>errorHandler(error));
 
+
         })
 
         }
@@ -94,7 +106,6 @@ function weatherhandler(request, response){
     getWeather(city)
     .then(weatherData =>{
         response.status(200).json(weatherData);
-        
     }).catch(()=>{
         errorHandler('Error in getting data from WeatherIQ')
     })
@@ -174,9 +185,7 @@ server.get('*', notFoundHandler);
 
 server.use(errorHandler);
 
-server.use('*', (request, response) => {
-    response.status(404).send('NOT FOUND');
-});
+
 
 function notFoundHandler(request,response) { 
     response.status(404).send('huh??');
@@ -184,18 +193,12 @@ function notFoundHandler(request,response) {
 
 
 function errorHandler(errors) {
-    server.use('*',(request,response)=>{
-        response.status(500).send(errors);
+    server.use('*',(req,res)=>{
+        res.status(500).send(errors);
     })
 }
 
 
-client.connect()
-.then(()=>{
-    server.listen(PORT, () => {
-        console.log(`Listening on PORT${PORT}`);
-    })
-});
 
 
 
