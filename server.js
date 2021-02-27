@@ -24,6 +24,8 @@ const client=new pg.Client(process.env.DATABASE_URL);
 server.get('/location', locationHandler);
 server.get('/weather', weatherhandler)
 server.get('/parks', parkHandler);
+server.get('/movies', moviesHandler);
+
 
 
 function locationHandler(request, response) {
@@ -141,9 +143,6 @@ function parkHandler(request,response){
         errorHandler('Error in getting data from parkIQ')
     })
 
-  
-    
-
 }
 
 function getPark(){
@@ -171,8 +170,65 @@ function Park(info){
     this.url =info.url
 
 }
-///////////////////
 
+// get movies
+
+function moviesHandler(request, response){
+    const city = request.query.search_query;
+    getMovies(city)
+    .then(movieskData =>{
+        response.status(200).json(movieskData);
+    }).catch(()=>{
+        errorHandler('Error in getting data from parkIQ')
+    })
+
+}
+
+function getMovies(city){
+    const key = process.env.MOVIE_KEY;
+    let url = `https://api.themoviedb.org/3/search/movie?api_key=${key}&query=${city}`;
+    let movieArr =[];
+
+    return superagent.get(url)
+    .then(movieData =>{
+        movieData.body.data.map((val,i) =>{
+            let movieInfo = new Movies (val);
+            movieArr.push(movieInfo);
+        })
+        return movieArr;
+    })
+
+
+
+}
+
+function Movies(info){
+    this.title = info.movieTitle
+    this.overview = info.movieOverview
+    this.average_votes = info.movieAvgVotes
+    this.total_votes = info.movieTotalVotes
+    this.image_url = info.movieImageUrl
+    this.popularity = info.moviePopularity
+    this.released_on = info.movieReleasedOn
+
+}
+// get yelp 
+
+function yelpHandler(){
+
+}
+
+function getYelp(){
+    
+}
+
+function Yelp(info) {
+    this.name = info.name;
+    this.image_url = info.image_url;
+    this.price = info.price;
+    this.rating = info.rating;
+    this.url = info.url;
+}
 
 
 
