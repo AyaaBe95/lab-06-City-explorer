@@ -25,6 +25,8 @@ server.get('/location', locationHandler);
 server.get('/weather', weatherhandler)
 server.get('/parks', parkHandler);
 server.get('/movies', moviesHandler);
+server.get('/yelp', yelpHandler);
+
 
 
 
@@ -214,13 +216,26 @@ function Movies(info){
 }
 // get yelp 
 
-function yelpHandler(){
+function yelpHandler(req,res){
+    let key = process.env.YELP_KEY;
+    let page = req.query.page;
+    let numPerPage = 5;
+    let start = ((page - 1) * numPerPage + 1);
+    let lat = req.query.latitude;
+    let lon = req.query.longitude;
+    let url = `https://api.yelp.com/v3/businesses/search?latitude=${lat}&longitude=${lon}&limit=${numPerPage}&offset=${start}`;
+    superagent.get(url)
+        .set("Authorization", `Bearer ${key}`)
+        .then(yelpData => {
+            let yelpArr = yelpData.body.businesses.map(val => new Yelp(val));
+            res.status(200).send(yelpArr);
+        }).catch(() => {
+            errorHandler('Error in getting data from Movies')
+        })
 
 }
 
-function getYelp(){
-    
-}
+
 
 function Yelp(info) {
     this.name = info.name;
